@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+
+<body></body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.min.js"></script>
+<script>
+  function rowProcessor({ date, min, max }) {
+    return {
+      date,
+      min: +min,
+      max: +max
+    }
+  }
+
+  d3.csv('VHHH_temperature_1997_2017.csv', rowProcessor, (error, data) => {
+    if (error) throw error
+
+    console.log(data)
+
+    // some constants
+    const width = 860
+    const height = 450
+    const margins = { top: 20, right: 40, bottom: 30, left: 60 }
+
+    // make svg canvas
+    const g = d3.select('body')
+      .append('svg')
+      .attr('width', width + margins.left + margins.right)
+      .attr('height', height + margins.top + margins.bottom)
+      .append('g')
+      .attr('transform', `translate(${margins.left}, ${margins.top})`)
+
+    // define x scale
+    const x = d3.scaleBand()
+      .range([0, width])
+      .domain(d3.map(data, d => d.date.substring(0, 4)).keys())
+      .padding(0.2)
+
+    // define y scale
+    const y = d3.scaleBand()
+      .domain(d3.range(1, 13))
+      .range([0, height])
+      .padding(0.2)
+
+    // draw x axis
+    const xAxis = d3.axisTop(x)
+    g.append('g')
+      .call(xAxis)
+
+    // draw y axis
+    const yAxis = d3.axisLeft(y)
+      .tickFormat(d => moment(d, 'M').format('MMMM'))
+    g.append('g')
+      .call(yAxis)
+
+    // define color scale
+    // const color = d3.scaleQuantile()
+    //   .domain(d3.range(0, 40))
+    //   .range([
+    //     "#5E4FA2",
+    //     "#3288BD",
+    //     "#66C2A5",
+    //     "#ABDDA4",
+    //     "#E6F598",
+    //     "#FFFFBF",
+    //     "#FEE08B",
+    //     "#FDAE61",
+    //     "#F46D43",
+    //     "#D53E4F",
+    //     "#9E0142"
+    //   ])
+
+    // draw heatmap dots
+    g.selectAll('rect')
+      .data(data)
+      .enter().append('rect')
+      .attr('x', d => x(moment(d.date).year()))
+      .attr('y', d => y(moment(d.date).month() + 1))
+      .attr('width', x.bandwidth())
+      .attr('height', y.bandwidth())
+      .attr('fill', d => color(d.max))
+  })
+</script>

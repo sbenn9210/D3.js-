@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body></body>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.min.js"></script>
+<script>
+  function rowProcessor({ Row, Column, Score }) {
+    return {
+      Row,
+      Column,
+      Score: +Score
+    }
+  }
+
+  d3.csv('heatmap_data_not_sorted.csv', rowProcessor).then((data) => {
+
+
+    console.log(data)
+
+    // some constants
+    const width = 860
+    const height = 450
+    const margins = { top: 40, right: 40, bottom: 30, left: 100 }
+
+    // make svg canvas
+    const g = d3.select('body')
+      .append('svg')
+      .attr('width', width + margins.left + margins.right)
+      .attr('height', height + margins.top + margins.bottom)
+      .append('g').attr("class", "label")
+      .attr('transform', `translate(${margins.left}, ${margins.top})`)
+
+    // define x scale
+    const x = d3.scaleBand()
+      .domain(data.map((d) => { return d.Column }))
+      .range([0, width])
+      .padding(0.1)
+
+    // define y scale
+    const y = d3.scaleBand()
+      .domain(data.map((d) => { return d.Row }))
+      .range([0, height])
+      .padding(0.1)
+
+    // draw x axis
+    const xAxis = d3.axisTop(x)
+    g.append('g')
+      .call(xAxis)
+
+    // draw y axis
+    const yAxis = d3.axisLeft(y)
+    g.append('g')
+      .call(yAxis)
+
+    // define color scale
+    const color = d3.scaleQuantile()
+      .domain(d3.range(0, 80))
+      .range([
+        "#ED5F63",
+        "#F28F91",
+        "#F6AEB0",
+        "#F5F5F5",
+        "#ADDEF0",
+        "#70C6E5",
+        "#32AEDA",
+      ])
+
+
+    // // draw heatmap dots
+    // let rects = g.selectAll('rect')
+    //   .data(data)
+    //   .enter().append('rect')
+    //   .attr('x', d => { return x(d.Column) })
+    //   .attr('y', d => { return y(d.Row) })
+    //   .attr('width', x.bandwidth())
+    //   .attr('height', y.bandwidth())
+    //   .attr('fill', d => color(d.Score))
+    //   .text(d => { return d.Score })
+
+
+    let text = g.selectAll("text")
+      .data(data)
+      .enter().append('text')
+      .attr("class", "labels")
+      .attr('x', d => { return x(d.Column) })
+      .attr('y', d => { return y(d.Row) })
+      // .attr("dy", "-1em")
+      // .attr('width', x.bandwidth())
+      // .attr('height', y.bandwidth())
+      // .style("text-anchor", "middle")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "12px")
+      .attr("fill", "black")
+      .text(d => { return d.Score })
+
+
+
+  })
+</script>
